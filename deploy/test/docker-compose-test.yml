@@ -1,0 +1,38 @@
+services:
+  app:
+    image: 10.47.0.221:5000/table_service_backend:test
+    env_file:
+      - .env
+    environment:
+      - RUNNING_IN_DOCKER=True
+    ports:
+      - target: 8000
+        published: 8004
+    volumes:
+      - imports_tmp:/tmp/imports
+    restart: unless-stopped
+
+  scheduler:
+    image: 10.47.0.221:5000/table_service_backend:test
+    command: ["python", "manage.py", "run_scheduler"]
+    env_file:
+      - .env
+    environment:
+      - RUNNING_IN_DOCKER=True
+    volumes:
+      - imports_tmp:/tmp/imports     # ← тот же volume, что и у app
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  nginx:
+    image: 10.47.0.221:5000/table_service_client:test
+    ports:
+      - target: 80
+        published: 8003
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  imports_tmp:

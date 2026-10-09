@@ -1,0 +1,6 @@
+FROM 10.47.0.221:5000/table_service_api-nginx:v1
+
+COPY test-conf.conf /etc/nginx/conf.d/default.conf
+COPY test3.keytab /etc/example.keytab
+RUN mkdir -p /etc/nginx/html
+COPY build /etc/nginx/html

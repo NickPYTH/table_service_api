@@ -1,0 +1,5 @@
+FROM 10.47.0.221:5000/table_service_api-nginx:v1
+
+COPY dev-conf.conf /etc/nginx/conf.d/default.conf
+RUN mkdir -p /etc/nginx/html
+COPY build /etc/nginx/html

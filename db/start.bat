@@ -1,0 +1,1 @@
+docker run --name collector-db -e POSTGRES_USER=collector -e POSTGRES_PASSWORD=collector -e POSTGRES_DB=collector -p 5433:5432 -v postgres_data:/var/lib/postgresql/data -d postgres:16

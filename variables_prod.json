@@ -1,0 +1,19 @@
+{
+  "PROD_SECRET_KEY": "django-insecure-&bn$)l27mB$g1p7js==&%62R-^=cb(z@*pf$1c20wzyq=1s&0v",
+  "PROD_DEBUG": "True",
+  "PROD_DB_HOST": "sco1-vpg-01",
+  "PROD_DB_PORT": "5432",
+  "PROD_DB_NAME": "collector",
+  "PROD_DB_SCHEMA": "collector",
+  "PROD_DB_USER": "collector",
+  "PROD_DB_PASSWORD": "aAEzgZJ#ko5cAm3rAFTsL_ddtQiP4Y",
+  "PROD_INTEGRATION_LOGIN": "AdminInt@SGP.RU",
+  "PROD_INTEGRATION_PASSWORD": "123",
+  "PROD_MINIO_ENDPOINT": "test-vapp-03.sgp.ru:9000",
+  "PROD_MINIO_ACCESS_KEY": "minioadmin",
+  "PROD_MINIO_SECRET_KEY": "minioadminpassword",
+  "PROD_MINIO_USE_HTTPS": false,
+  "PROD_MINIO_MEDIA_BUCKET_NAME": "django-media",
+  "PROD_MINIO_STATIC_BUCKET_NAME": "django-static",
+  "PROD_MINIO_EXTERNAL_ENDPOINT": "test-vapp-03.sgp.ru:9000"
+}

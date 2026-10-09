@@ -1,0 +1,132 @@
+stages:
+  - deploy
+
+deploy_on_test:
+  stage: deploy
+  tags:
+    - test3
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "test_server_cicd"
+  environment:
+    name: Test_enviroment
+    url: https://test-vapp-03.sgp.ru/table_service/tables_list
+  variables:
+    GIT_STRATEGY: none
+    SECRET_KEY: $TEST_SECRET_KEY
+    DEBUG: $TEST_DEBUG
+    DB_HOST: $TEST_DB_HOST
+    DB_PORT: $TEST_DB_PORT
+    DB_NAME: $TEST_DB_NAME
+    DB_SCHEMA: $TEST_DB_SCHEMA
+    DB_USER: $TEST_DB_USER
+    DB_PASSWORD: $TEST_DB_PASSWORD
+    INTEGRATION_LOGIN: $TEST_INTEGRATION_LOGIN
+    INTEGRATION_PASSWORD: $TEST_INTEGRATION_PASSWORD
+    MINIO_ENDPOINT: $TEST_MINIO_ENDPOINT
+    MINIO_ACCESS_KEY: $TEST_MINIO_ACCESS_KEY
+    MINIO_SECRET_KEY: $TEST_MINIO_SECRET_KEY
+    MINIO_USE_HTTPS: $TEST_MINIO_USE_HTTPS
+    MINIO_MEDIA_BUCKET_NAME: $TEST_MINIO_MEDIA_BUCKET_NAME
+    MINIO_STATIC_BUCKET_NAME: $TEST_MINIO_STATIC_BUCKET_NAME
+    MINIO_EXTERNAL_ENDPOINT: $TEST_MINIO_EXTERNAL_ENDPOINT
+  script:
+    - echo "=== Начинаем тестовый деплой Table Service на test-vapp-03.sgp.ru ==="
+    - cd /opt/gitflic-runner/table_service_api
+    - git checkout test_server_cicd
+    - git pull
+    - cd backend
+    - docker build -t 10.47.0.221:5000/table_service_backend:test .
+    - cd ../frontend
+    - docker build -f Dockerfile-test -t 10.47.0.221:5000/table_service_client:test .
+    - cd ..
+    - echo "Создаем временный файл с секретами"
+    - echo "SECRET_KEY=${SECRET_KEY}" > deploy/test/.env
+    - echo "DEBUG=${DEBUG}" >> deploy/test/.env
+    - echo "DB_HOST=${DB_HOST}" >> deploy/test/.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/test/.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/test/.env
+    - echo "DB_SCHEMA=${DB_SCHEMA}" >> deploy/test/.env
+    - echo "DB_USER=${DB_USER}" >> deploy/test/.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/test/.env
+    - echo "INTEGRATION_LOGIN=${INTEGRATION_LOGIN}" >> deploy/test/.env
+    - echo "INTEGRATION_PASSWORD=${INTEGRATION_PASSWORD}" >> deploy/test/.env
+    - echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}" >> deploy/test/.env
+    - echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}" >> deploy/test/.env
+    - echo "MINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >> deploy/test/.env
+    - echo "MINIO_USE_HTTPS=${MINIO_USE_HTTPS}" >> deploy/test/.env
+    - echo "MINIO_MEDIA_BUCKET_NAME=${MINIO_MEDIA_BUCKET_NAME}" >> deploy/test/.env
+    - echo "MINIO_STATIC_BUCKET_NAME=${MINIO_STATIC_BUCKET_NAME}" >> deploy/test/.env
+    - echo "MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT}" >> deploy/test/.env
+    - echo "Выполняем docker compose down..."
+    - docker compose -f deploy/test/docker-compose-test.yml down
+    - echo "Выполняем docker compose up..."
+    - docker compose -f deploy/test/docker-compose-test.yml up -d
+    - echo "Удаляем временный файл с секретами"
+#    - sleep 51
+#    - rm deploy/test/.env
+    - echo "=== Весь процесс тестового деплоя завершен на test-vapp-03.sgp.ru ==="
+
+deploy_on_prod:
+  stage: deploy
+  tags:
+    - prod9
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "prod9_server_cicd"
+  environment:
+    name: Prod_enviroment
+    url: https://sco1-vapp-09.sgp.ru/table_service/tables_list
+  variables:
+    GIT_STRATEGY: none
+    SECRET_KEY: $PROD_SECRET_KEY
+    DEBUG: $PROD_DEBUG
+    DB_HOST: $PROD_DB_HOST
+    DB_PORT: $PROD_DB_PORT
+    DB_NAME: $PROD_DB_NAME
+    DB_SCHEMA: $PROD_DB_SCHEMA
+    DB_USER: $PROD_DB_USER
+    DB_PASSWORD: $PROD_DB_PASSWORD
+    INTEGRATION_LOGIN: $PROD_INTEGRATION_LOGIN
+    INTEGRATION_PASSWORD: $PROD_INTEGRATION_PASSWORD
+    MINIO_ENDPOINT: $PROD_MINIO_ENDPOINT
+    MINIO_ACCESS_KEY: $PROD_MINIO_ACCESS_KEY
+    MINIO_SECRET_KEY: $PROD_MINIO_SECRET_KEY
+    MINIO_USE_HTTPS: $PROD_MINIO_USE_HTTPS
+    MINIO_MEDIA_BUCKET_NAME: $PROD_MINIO_MEDIA_BUCKET_NAME
+    MINIO_STATIC_BUCKET_NAME: $PROD_MINIO_STATIC_BUCKET_NAME
+    MINIO_EXTERNAL_ENDPOINT: $PROD_MINIO_EXTERNAL_ENDPOINT
+  script:
+    - echo "=== Начинаем продуктивный деплой Table Service на sco1-vapp-09.sgp.ru ==="
+    - cd /opt/gitflic-runner/table_service_api
+    - git checkout prod9_server_cicd
+    - git pull
+    - cd backend
+    - docker build -t 10.47.0.221:5000/table_service_backend:prod .
+    - docker push 10.47.0.221:5000/table_service_backend:prod
+    - cd ../frontend
+    - docker build -f Dockerfile-prod -t 10.47.0.221:5000/table_service_client:prod .
+    - docker push 10.47.0.221:5000/table_service_client:prod
+    - cd ..
+    - echo "Создаем временный файл с секретами"
+    - echo "SECRET_KEY=${SECRET_KEY}" > deploy/prod/.env
+    - echo "DEBUG=${DEBUG}" >> deploy/prod/.env
+    - echo "DB_HOST=${DB_HOST}" >> deploy/prod/.env
+    - echo "DB_PORT=${DB_PORT}" >> deploy/prod/.env
+    - echo "DB_NAME=${DB_NAME}" >> deploy/prod/.env
+    - echo "DB_SCHEMA=${DB_SCHEMA}" >> deploy/prod/.env
+    - echo "DB_USER=${DB_USER}" >> deploy/prod/.env
+    - echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy/prod/.env
+    - echo "INTEGRATION_LOGIN=${INTEGRATION_LOGIN}" >> deploy/prod/.env
+    - echo "INTEGRATION_PASSWORD=${INTEGRATION_PASSWORD}" >> deploy/prod/.env
+    - echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}" >> deploy/prod/.env
+    - echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}" >> deploy/prod/.env
+    - echo "MINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >> deploy/prod/.env
+    - echo "MINIO_USE_HTTPS=${MINIO_USE_HTTPS}" >> deploy/prod/.env
+    - echo "MINIO_MEDIA_BUCKET_NAME=${MINIO_MEDIA_BUCKET_NAME}" >> deploy/prod/.env
+    - echo "MINIO_STATIC_BUCKET_NAME=${MINIO_STATIC_BUCKET_NAME}" >> deploy/prod/.env
+    - echo "MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT}" >> deploy/prod/.env
+    - echo "Выполняем docker stack deploy..."
+    - docker stack deploy --with-registry-auth -c deploy/prod/docker-compose-swarm-prod.yml table-service
+    - echo "Удаляем временный файл с секретами"
+    - sleep 5
+    - rm deploy/prod/.env
+    - echo "=== Весь процесс продуктивного деплоя завершен на sco1-vapp-09.sgp.ru ==="

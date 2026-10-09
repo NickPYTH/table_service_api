@@ -1,0 +1,20 @@
+from django.urls.conf import path
+
+from . import views
+
+urlpatterns = [
+    path('remove_table_permission/', views.remove_table_permission, name='remove_table_permission'),
+    path('add_table_permission/', views.add_table_permission, name='add_table_permission'),
+    path('delete_table/', views.delete_table, name='delete_table'),
+    path('delete_row/', views.delete_row, name='delete_row'),
+    path('update_cell/', views.update_cell_request, name='update_cell'),
+    path('create_from_file/', views.create_from_file, name='create_from_file'),
+    path('get_table_data/', views.get_table_data, name='get_table_data'),
+    path('get_table_info/', views.get_table_info, name='get_table_info'),
+    path('get_table_list/', views.get_table_list, name='get_table_list'),
+    path('get_table_columns/', views.get_table_columns, name='get_table_columns'),
+    path('get_cell_formula/', views.get_cell_formula, name='get_cell_formula'),
+    path('update_column/', views.update_column, name='update_column'),
+    path('get_column/', views.get_column, name='get_column'),
+
+]

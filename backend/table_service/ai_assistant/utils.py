@@ -3,8 +3,6 @@ import uuid
 
 from openai import OpenAI
 
-DEEPSEEK_API_KEY = "sk-c0059f8b0d69405d9ec8cdef54128408"
-
 SYSTEM_PROMPT = """
 Ты — ассистент, который преобразует запросы на естественном языке 
 в инструкции для MUI Data Grid.
@@ -40,7 +38,7 @@ def call_ai_provider(query, context, conversation_id, options):
     user = f"Запрос: {query}\nПримеры значений: {json.dumps(examples, ensure_ascii=False)}"
 
     client = OpenAI(
-        api_key=DEEPSEEK_API_KEY,
+        api_key="sk-c0059f8b0d69405d9ec8cdef54128408",
         base_url="https://api.deepseek.com"
     )
 

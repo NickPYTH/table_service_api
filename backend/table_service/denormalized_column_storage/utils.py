@@ -215,11 +215,11 @@ def recursive_update(table_name, table_id, column_name, row_id, updated_cell):
         cursor.execute(f"""
                             with recursive affected as (
                             select from_column, from_row_id
-                            from table_service.denormalized_column_storage_formuladeps
+                            from collector.denormalized_column_storage_formuladeps
                             where table_name='{table_name}' AND to_row_id = {row_id} AND to_column = '{column_name}'
                             UNION
                             SELECT fd.from_column, fd.from_row_id
-                            FROM table_service.denormalized_column_storage_formuladeps fd
+                            FROM collector.denormalized_column_storage_formuladeps fd
                             JOIN affected a
                               ON fd.to_row_id = a.from_row_id AND fd.to_column = a.from_column
                             WHERE fd.table_name = '{table_name}'

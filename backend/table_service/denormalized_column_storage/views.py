@@ -9,8 +9,7 @@ from rest_framework.response import Response
 from .models import TableV2, ColumnV2, TablePermissionV2, CellFormula, FormulaDeps, RoleV2
 from .request_validate import update_cell_request_validate, \
     create_from_file_request_validate, get_table_data_request_validate, delete_row_request_validate, \
-    delete_table_request_validate, add_table_permission_request_validate, get_table_info_request_validate, \
-    get_column_request_validate, update_column_request_validate
+    delete_table_request_validate, add_table_permission_request_validate, get_table_info_request_validate
 from .utils import build_order_by_sql, build_filter_sql, escape_tsv, col_letter, calculate_formula, recursive_update, \
     update_cell
 from .ws_sender import send_cell_update
@@ -29,19 +28,6 @@ def get_table_list(request):
         })
     return Response(response_data)
 
-@api_view(['GET'])
-def get_table_columns(request):
-    table_id = request.GET.get('table_id')
-    table = TableV2.objects.get(id=table_id)
-    response_data = []
-    for column in ColumnV2.objects.filter(table=table).order_by('id'):
-        response_data.append({
-            "id": column.id,
-            "system_name": column.system_name,
-            "alternative_name": column.alternative_name,
-            "type": column.type,
-        })
-    return Response(response_data)
 
 @api_view(['POST'])
 def create_from_file(request):
@@ -112,7 +98,6 @@ def create_from_file(request):
             type='text'
         )
         column_model.save()
-
 
     return Response({'table_id': table.id}, status=201)
 
@@ -205,7 +190,7 @@ def get_table_data(request):
             )
             total = cursor.fetchone()[0]
 
-            offset = page * page_size # 0 * 25 = 0 => отступ отсутствует
+            offset = page * page_size  # 0 * 25 = 0 => отступ отсутствует
 
             cursor.execute(f"""
                         SELECT *
@@ -219,17 +204,17 @@ def get_table_data(request):
 
     data = [dict(zip(columns, row)) for row in rows]
 
-    total_pages = int(total/page_size) if total%page_size==0 else int(total/page_size)+1
+    total_pages = int(total / page_size) if total % page_size == 0 else int(total / page_size) + 1
     return Response({
-        #"columns": columns,
+        # "columns": columns,
         "rows": data,
         "paginator": {
             "page": 0 if group_fields and group_keys else page,
             "pageSize": total if group_fields and group_keys else page_size,
             "total": total,
             "totalPages": 1 if group_fields and group_keys else total_pages,
-            "hasNext": page+1 < total_pages, # Учитываем что page с 0
-            "hasPrev": page+1 > 1, # Учитываем что page с 0
+            "hasNext": page + 1 < total_pages,  # Учитываем что page с 0
+            "hasPrev": page + 1 > 1,  # Учитываем что page с 0
         }
     }, status=200)
 
@@ -347,6 +332,7 @@ def remove_table_permission(request):
 
     return Response({'result': 'success'})
 
+
 @api_view(['POST'])
 def get_cell_formula(request):
     table_id = request.data['table_id']
@@ -357,26 +343,3 @@ def get_cell_formula(request):
     if cell_formula.exists():
         return Response({'formula': cell_formula[0].formula})
     return Response({'formula': None}, status=404)
-
-
-@api_view(['POST'])
-def update_column(request):
-    table_id, column_system_name, column_alternative_name, column_type = update_column_request_validate(request)
-    table = TableV2.objects.get(id=table_id)
-    column = ColumnV2.objects.get(table=table, system_name=column_system_name)
-    column.type = column_type
-    column.alternative_name = column_alternative_name
-    column.save()
-    return Response({'result': 'success'})
-
-@api_view(['GET'])
-def get_column(request):
-    table_id, system_name = get_column_request_validate(request)
-    table = TableV2.objects.get(id=table_id)
-    column = ColumnV2.objects.get(table=table, system_name=system_name)
-    return Response({
-        'table_id': column.table.id,
-        'system_name': column.system_name,
-        'alternative_name': column.alternative_name,
-        'type': column.type
-    })

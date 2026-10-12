@@ -27,6 +27,16 @@ class ColumnV2(models.Model):
     system_name = models.CharField(max_length=255)
     alternative_name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
+    hidden = models.BooleanField(default=False)
+    required = models.BooleanField(default=False)
+    readonly = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ColumnV2SelectValues(models.Model):
+    column = models.ForeignKey(ColumnV2, on_delete=models.DO_NOTHING)
+    value = models.CharField(max_length=255)
 
 
 class CellFormula(models.Model):

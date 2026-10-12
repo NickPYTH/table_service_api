@@ -129,7 +129,19 @@ def update_column_request_validate(request):
         column_type = request.data['type']
     except Exception as e:
         raise e
-    return table_id, column_system_name, column_alternative_name, column_type
+    try:
+        hidden = request.data['hidden']
+    except Exception as e:
+        raise e
+    try:
+        required = request.data['required']
+    except Exception as e:
+        raise e
+    try:
+        readonly = request.data['readonly']
+    except Exception as e:
+        raise e
+    return table_id, column_system_name, column_alternative_name, column_type, hidden, required, readonly
 
 def get_column_request_validate(request):
     try:

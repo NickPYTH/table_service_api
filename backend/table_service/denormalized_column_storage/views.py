@@ -148,7 +148,6 @@ def get_table_data(request):
         table = TableV2.objects.get(id=table_id)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
-    offset = page * page_size
     with connection.cursor() as cursor:
         if group_fields and not group_keys:
             group_field = group_fields[0]  # например 'b' пока одноуровневая группировка
@@ -211,7 +210,7 @@ def get_table_data(request):
             cursor.execute(f"""
                         SELECT *
                         FROM {table.system_name}
-                        {build_filter_sql(filter)}
+                        {build_filter_sql(table.system_name, filter)}
                         {build_order_by_sql(sort, table.system_name)}
                         LIMIT {page_size} OFFSET {offset}
                     """)

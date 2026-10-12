@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'chat.apps.ChatConfig',
     'api',
     'denormalized_column_storage',
+    'ai_assistant'
 ]
 
 

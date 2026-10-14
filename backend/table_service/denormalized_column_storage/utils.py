@@ -48,14 +48,14 @@ def check_column_exist_in_table(column_name, table_name):
 def build_order_by_sql(sort_fields, table_name):
     """Формируем ORDER BY часть в формате SQL"""
     if len(sort_fields) == 0:
-        return 'ORDER BY id'
+        return 'ORDER BY position, id'
     # должно получиться так - ORDER BY status DESC, name ASC
     result = "ORDER BY"
     for sort_field in sort_fields:
         if check_column_exist_in_table(sort_field['field'], table_name):
             result += f" {sort_field['field']} {sort_field['sort'].upper()},"
     if result == "ORDER BY":
-        return 'ORDER BY id'
+        return 'ORDER BY position, id'
     return result[:-1]
 
 

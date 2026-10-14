@@ -194,10 +194,7 @@ def get_table_data(request):
             total = cursor.fetchone()[0]
 
             offset = page * page_size  # 0 * 25 = 0 => отступ отсутствует
-
             order_sql = build_order_by_sql(sort, table.system_name)
-            if not order_sql:
-                order_sql = "ORDER BY position, id"
             cursor.execute(f"""
                         SELECT *,
                         ROW_NUMBER() OVER ({order_sql}) - 1 AS position_humanity

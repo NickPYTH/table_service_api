@@ -6,7 +6,7 @@ from denormalized_column_storage.request_validate import get_column_request_vali
 
 
 @api_view(['GET'])
-def get_table_columns(request):
+def get_columns_by_table(request):
     table_id = request.GET.get('table_id')
     table = TableV2.objects.get(id=table_id)
     response_data = []
@@ -21,21 +21,6 @@ def get_table_columns(request):
             'readonly': column.readonly
         })
     return Response(response_data)
-
-
-@api_view(['POST'])
-def update_column(request):
-    table_id, column_system_name, column_alternative_name, column_type, hidden, required, readonly = update_column_request_validate(
-        request)
-    table = TableV2.objects.get(id=table_id)
-    column = ColumnV2.objects.get(table=table, system_name=column_system_name)
-    column.type = column_type
-    column.alternative_name = column_alternative_name
-    column.readonly = readonly
-    column.required = required
-    column.hidden = hidden
-    column.save()
-    return Response({'result': 'success'})
 
 
 @api_view(['GET'])
@@ -53,6 +38,21 @@ def get_column(request):
         'hidden': column.hidden,
         'readonly': column.readonly
     })
+
+
+@api_view(['POST'])
+def update_column(request):
+    table_id, column_system_name, column_alternative_name, column_type, hidden, required, readonly = update_column_request_validate(
+        request)
+    table = TableV2.objects.get(id=table_id)
+    column = ColumnV2.objects.get(table=table, system_name=column_system_name)
+    column.type = column_type
+    column.alternative_name = column_alternative_name
+    column.readonly = readonly
+    column.required = required
+    column.hidden = hidden
+    column.save()
+    return Response({'result': 'success'})
 
 
 @api_view(['GET'])

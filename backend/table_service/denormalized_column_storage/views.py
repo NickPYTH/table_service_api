@@ -63,7 +63,7 @@ def create_from_file(request):
     for i, column in enumerate(columns, start=1):
         columns_str_with_type += f'"{col_letter(i)}" VARCHAR(255),'
         columns_str += f'"{col_letter(i)}",'
-    columns_str_with_type += 'allowed_users   INTEGER[],\nallowed_filials   INTEGER[],\nid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
+    columns_str_with_type += 'allowed_users  INTEGER[],\nallowed_filials   INTEGER[],\nid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
     columns_str += 'allowed_users, allowed_filials'
 
     create_table_sql = f"CREATE TABLE {table_name} ({columns_str_with_type}) WITH (fillfactor = 70);"

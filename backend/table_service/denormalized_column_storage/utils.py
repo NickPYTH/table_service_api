@@ -72,7 +72,7 @@ def get_table_column_list_sql(table_name):
 
 def build_quick_filter_sql(table_name, search_value):
     """Формируем часть WHERE для быстрого поиска по всем колонкам"""
-    EXCLUDED_COLUMNS = {'id', 'allowed_users', 'allowed_filials', 'order'}
+    EXCLUDED_COLUMNS = {'id', 'allowed_users', 'allowed_filials', 'order', 'position'}
     columns = get_table_column_list_sql(table_name)
     safe_columns = [
         f'"{col}"'

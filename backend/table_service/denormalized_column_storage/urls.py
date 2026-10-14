@@ -1,6 +1,6 @@
 from django.urls.conf import path
 
-from . import column_views
+from . import column_views, row_views
 from . import views
 
 urlpatterns = [
@@ -21,4 +21,5 @@ urlpatterns = [
     path('create_column_select_list/', column_views.create_column_select_list, name='create_column_select_list'),
     path('update_column_select_list/', column_views.update_column_select_list, name='update_column_select_list'),
     path('delete_column_select_list/', column_views.delete_column_select_list, name='delete_column_select_list'),
+    path('insert_row/', row_views.insert_row, name='insert_row'),
 ]

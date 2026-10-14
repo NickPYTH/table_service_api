@@ -10,6 +10,7 @@ from .models import TableV2, ColumnV2, TablePermissionV2, CellFormula, FormulaDe
 from .request_validate import update_cell_request_validate, \
     create_from_file_request_validate, get_table_data_request_validate, delete_row_request_validate, \
     delete_table_request_validate, add_table_permission_request_validate, get_table_info_request_validate
+from .row_views import STEP
 from .utils import build_order_by_sql, build_filter_sql, escape_tsv, col_letter, calculate_formula, recursive_update, \
     update_cell
 from .ws_sender import send_cell_update
@@ -48,14 +49,14 @@ def create_from_file(request):
     columns = [str(h).strip() for h in header]
 
     buffer = io.StringIO()  # заполняем tsv форматом table sep format
-    for row in rows:
+    for i, row in enumerate(rows):
         tmp = [v for v in row]
         tmp.append({user.id})  # Права пользователей
         tmp.append({})  # Права филиалов
-        if len(tmp) != len(columns) + 2:
+        tmp.append(i * STEP) # Позиция *100 для вставок
+        if len(tmp) != len(columns) + 3:
             continue
-        else:
-            buffer.write("\t".join(escape_tsv(record) for record in tmp) + "\n")
+        buffer.write("\t".join(escape_tsv(record) for record in tmp) + "\n")
     buffer.seek(0)  # для курсора отматываем буфер обратно тк после записи указатель в конце
 
     columns_str_with_type = ''
@@ -63,17 +64,19 @@ def create_from_file(request):
     for i, column in enumerate(columns, start=1):
         columns_str_with_type += f'"{col_letter(i)}" VARCHAR(255),'
         columns_str += f'"{col_letter(i)}",'
-    columns_str_with_type += 'allowed_users  INTEGER[],\nallowed_filials   INTEGER[],\nid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
-    columns_str += 'allowed_users, allowed_filials'
+    columns_str_with_type += 'allowed_users  INTEGER[],\nallowed_filials   INTEGER[],position BIGINT NOT NULL DEFAULT 0,\nid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
+    columns_str += 'allowed_users, allowed_filials, position'
 
     create_table_sql = f"CREATE TABLE {table_name} ({columns_str_with_type}) WITH (fillfactor = 70);"
     create_user_index = f"CREATE INDEX idx_allowed_users_{table_name} ON {table_name} USING GIN (allowed_users);"
     create_filial_index = f"CREATE INDEX idx_allowed_filials_{table_name} ON {table_name} USING GIN (allowed_filials);"
+    create_position_index = f"CREATE INDEX idx_position_{table_name} "f"ON {table_name}(position, id);"
 
     with connection.cursor() as cursor:
         cursor.execute(create_table_sql)
         cursor.execute(create_user_index)
         cursor.execute(create_filial_index)
+        cursor.execute(create_position_index)
 
     with connection.cursor() as cursor:
         cursor.copy_expert(
@@ -192,11 +195,15 @@ def get_table_data(request):
 
             offset = page * page_size  # 0 * 25 = 0 => отступ отсутствует
 
+            order_sql = build_order_by_sql(sort, table.system_name)
+            if not order_sql:
+                order_sql = "ORDER BY position, id"
             cursor.execute(f"""
-                        SELECT *
+                        SELECT *,
+                        ROW_NUMBER() OVER ({order_sql}) - 1 AS position_humanity
                         FROM {table.system_name}
                         {build_filter_sql(table.system_name, filter)}
-                        {build_order_by_sql(sort, table.system_name)}
+                        {order_sql}
                         LIMIT {page_size} OFFSET {offset}
                     """)
         columns = [col[0] for col in cursor.description]

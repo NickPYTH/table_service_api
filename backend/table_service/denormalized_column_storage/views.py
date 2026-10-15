@@ -6,10 +6,11 @@ from django.db import connection
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from tables.models import Profile
 from .models import TableV2, ColumnV2, TablePermissionV2, RoleV2
 from .request_validate import create_from_file_request_validate, get_table_data_request_validate, \
     delete_table_request_validate, \
-    add_table_permission_request_validate, get_table_info_request_validate
+    add_table_permission_request_validate, get_table_info_request_validate, update_table_request_validate
 from .row_views import STEP
 from .utils import build_order_by_sql, build_filter_sql, escape_tsv, col_letter
 
@@ -274,6 +275,26 @@ def add_table_permission(request):
     return Response({'result': 'success'})
 
 
+@api_view(['GET'])
+def get_user_table_permissions(request):
+    table_id = request.query_params.get('table_id')
+    table = TableV2.objects.get(id=table_id)
+    response = []
+    for permission in TablePermissionV2.objects.filter(table=table):
+        user = permission.user
+        profile = Profile.objects.get(user=user)
+        role = permission.role
+        response.append({
+            "id": permission.id,
+            "table_id": permission.table.id,
+            "user_id": permission.user.id,
+            "fio": f"{profile.employee.lastname} {profile.employee.firstname[0]}. {profile.employee.lastname[0]}.",
+            "role_id": role.id,
+            "role_name": role.humanity_name,
+        })
+    return Response(response)
+
+
 @api_view(['POST'])
 def remove_table_permission(request):
     """Метод для удаления прав на таблицу(TablePermissionV2) + удаление user_id в каждой строке"""
@@ -294,5 +315,15 @@ def remove_table_permission(request):
                 WHERE {user_id} = ANY(allowed_users)
             """,
         )
+
+    return Response({'result': 'success'})
+
+
+@api_view(['POST'])
+def update_table_info(request):
+    table_id, alternative_name = update_table_request_validate(request)
+    table = TableV2.objects.get(id=table_id)
+    table.alternative_name = alternative_name
+    table.save()
 
     return Response({'result': 'success'})

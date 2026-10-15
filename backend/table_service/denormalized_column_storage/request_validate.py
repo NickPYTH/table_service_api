@@ -101,6 +101,24 @@ def add_table_permission_request_validate(request):
         raise e
     return table_id, user_id
 
+def get_table_permission_request_validate(request):
+    try:
+        table_id = request.data['table_id']
+    except Exception as e:
+        raise e
+    return table_id
+
+def update_table_request_validate(request):
+    try:
+        table_id = request.data['table_id']
+    except Exception as e:
+        raise e
+    try:
+        alternative_name = request.data['alternative_name']
+    except Exception as e:
+        raise e
+    return table_id, alternative_name
+
 def remove_table_permission_request_validate(request):
     try:
         table_id = request.data['table_id']

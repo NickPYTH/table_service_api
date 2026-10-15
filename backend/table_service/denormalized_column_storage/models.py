@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+
 class TableV2(models.Model):
     system_name = models.CharField(max_length=255)
     alternative_name = models.CharField(max_length=255)
@@ -11,6 +12,7 @@ class TableV2(models.Model):
 
 class RoleV2(models.Model):
     name = models.CharField(max_length=255)
+    humanity_name = models.CharField(max_length=255, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

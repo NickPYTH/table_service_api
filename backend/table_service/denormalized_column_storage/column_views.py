@@ -69,13 +69,17 @@ def insert_column(request):
     table = TableV2.objects.get(id=table_id)
     columns = ColumnV2.objects.filter(table=table_id).order_by('position')  # position 1 ... n
     # Вычисляем позицию
-    neighborhood_column = ColumnV2.objects.get(table=table_id, system_name=neighborhood_system_name)
     if position_name == 'before_id':
+        neighborhood_column = ColumnV2.objects.get(table=table_id, system_name=neighborhood_system_name)
         position = neighborhood_column.position
     elif position_name == 'after_id':
+        neighborhood_column = ColumnV2.objects.get(table=table_id, system_name=neighborhood_system_name)
         position = neighborhood_column.position + 1
     else:
-        # Вставка в конец
+        if len(columns) == 0:
+            position = 1
+        else:
+            position = columns.last().position+1
         pass
     # -----
 

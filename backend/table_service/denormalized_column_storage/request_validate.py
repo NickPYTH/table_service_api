@@ -151,11 +151,11 @@ def insert_column_request_validate(request):
     try:
         neighborhood_system_name = request.data['neighborhood_system_name']
     except Exception as e:
-        raise e
+        neighborhood_system_name = ''
     try:
         position_name = request.data['position_name']
     except Exception as e:
-        raise e
+        position_name = ''
     try:
         alternative_name = request.data['alternative_name']
     except Exception as e:

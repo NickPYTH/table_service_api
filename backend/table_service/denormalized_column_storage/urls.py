@@ -22,4 +22,5 @@ urlpatterns = [
     path('update_column_select_list/', column_views.update_column_select_list, name='update_column_select_list'),
     path('delete_column_select_list/', column_views.delete_column_select_list, name='delete_column_select_list'),
     path('insert_row/', row_views.insert_row, name='insert_row'),
+    path('insert_column/', column_views.insert_column, name='insert_column'),
 ]

@@ -20,3 +20,9 @@ class DenormalizedColumnStorageConsumer(AsyncJsonWebsocketConsumer):
             "type": "row_insert",
             "entity": event["data"]["entity"],
         })
+
+    async def column_inserted(self, event):
+        await self.send_json({
+            "type": "column_insert",
+            "entity": event["data"]["entity"],
+        })

@@ -70,6 +70,15 @@ def get_table_column_list_sql(table_name):
                        """)
         return [row[0] for row in cursor.fetchall()]
 
+def insert_column_sql(table_name, column_name):
+    """Вставка новой колонки"""
+    with connection.cursor() as cursor:
+        cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} VARCHAR(255);")
+
+def rename_column_sql(table_name, column_old_name, column_new_name):
+    """Переименовывает колонку в таблице"""
+    with connection.cursor() as cursor:
+        cursor.execute(f"ALTER TABLE {table_name} RENAME COLUMN {column_old_name} TO {column_new_name}")
 
 def build_quick_filter_sql(table_name, search_value):
     """Формируем часть WHERE для быстрого поиска по всем колонкам"""

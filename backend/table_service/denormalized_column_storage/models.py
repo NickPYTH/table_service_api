@@ -25,6 +25,7 @@ class TablePermissionV2(models.Model):
 class ColumnV2(models.Model):
     table = models.ForeignKey(TableV2, on_delete=models.DO_NOTHING)
     system_name = models.CharField(max_length=255)
+    position = models.IntegerField(default=0)
     alternative_name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     hidden = models.BooleanField(default=False)

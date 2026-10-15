@@ -97,6 +97,7 @@ def create_from_file(request):
         column_model = ColumnV2.objects.create(
             table=table,
             system_name=col_letter(i),
+            position=i,
             alternative_name=column,
             type='text'
         )

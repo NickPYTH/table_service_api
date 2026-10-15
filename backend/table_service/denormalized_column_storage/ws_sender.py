@@ -13,6 +13,7 @@ def send_cell_update(data):
             }
         }
     )
+
 def send_row_insert(data):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -22,6 +23,19 @@ def send_row_insert(data):
             "data": {
                 "entity": data,
                 "message": "Row inserted",
+            }
+        }
+    )
+
+def send_column_insert(data):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "update_service",
+        {
+            "type": "column.inserted",
+            "data": {
+                "entity": data,
+                "message": "Column inserted",
             }
         }
     )

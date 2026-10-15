@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from denormalized_column_storage.models import TableV2
+from denormalized_column_storage.request_validate import delete_row_request_validate
 from denormalized_column_storage.utils import get_table_column_list_sql, EXCLUDED_COLUMNS
 from denormalized_column_storage.ws_sender import send_row_insert
 
@@ -97,3 +98,15 @@ def insert_row(request):
         'id': new_id,
         'position': returned_pos,
     }, status=201)
+
+@api_view(['DELETE'])
+def delete_row(request):
+    table_name, row_id = delete_row_request_validate(request)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"DELETE FROM {table_name} WHERE id = {row_id}",
+        )
+
+    return Response({"result": "success"})
+

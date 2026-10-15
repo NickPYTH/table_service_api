@@ -5,6 +5,7 @@ from pycel.excelformula import ExcelFormula, OperatorNode, OperandNode, RangeNod
 
 from denormalized_column_storage.models import FormulaDeps, CellFormula
 
+EXCLUDED_COLUMNS = {'id', 'allowed_users', 'allowed_filials', 'position'}
 
 def col_letter(n):
     """Конвертация имени колонки в формат А1"""
@@ -72,7 +73,6 @@ def get_table_column_list_sql(table_name):
 
 def build_quick_filter_sql(table_name, search_value):
     """Формируем часть WHERE для быстрого поиска по всем колонкам"""
-    EXCLUDED_COLUMNS = {'id', 'allowed_users', 'allowed_filials', 'order', 'position'}
     columns = get_table_column_list_sql(table_name)
     safe_columns = [
         f'"{col}"'

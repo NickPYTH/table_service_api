@@ -3,18 +3,17 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from denormalized_column_storage.models import TableV2
-from denormalized_column_storage.utils import get_table_column_list_sql
+from denormalized_column_storage.utils import get_table_column_list_sql, EXCLUDED_COLUMNS
 from denormalized_column_storage.ws_sender import send_row_insert
 
 STEP = 1 << 32
-
 
 @api_view(['POST'])
 def insert_row(request):
     table_id = request.data.get('table_id')
     before_id = request.data.get('before_id')
     after_id = request.data.get('after_id')
-    copy_values = request.data.get('copy_values') or False
+    values = request.data.get('values', {}) or {}
 
     if table_id is None:
         return Response({'error': 'table_id is required'}, status=400)
@@ -23,7 +22,6 @@ def insert_row(request):
 
     table_name = table.system_name
 
-    source_row = None
     with connection.cursor() as cursor:
         # Вычисляем позицию
         if before_id is not None:
@@ -37,10 +35,6 @@ def insert_row(request):
             prev_pos = cursor.fetchone()[0]
 
             new_pos = (prev_pos + next_pos) // 2 if prev_pos is not None else next_pos - STEP
-
-            if copy_values:
-                cursor.execute(f"SELECT * FROM {table_name} WHERE id = {before_id}")
-                source_row = cursor.fetchone()
 
         elif after_id is not None:
             cursor.execute(f"SELECT position FROM {table_name} WHERE id = {after_id}")
@@ -56,10 +50,6 @@ def insert_row(request):
             next_pos = cursor.fetchone()[0]
 
             new_pos = (prev_pos + next_pos) // 2 if next_pos is not None else prev_pos + STEP
-
-            if copy_values:
-                cursor.execute(f"SELECT * FROM {table_name} WHERE id = {after_id}")
-                source_row = cursor.fetchone()
         else:
             # аппенд в конец
             cursor.execute(f"SELECT MAX(position) FROM {table_name}")
@@ -71,12 +61,10 @@ def insert_row(request):
         placeholders = []
         params = []
 
-        if copy_values and source_row is not None:
-            all_columns = get_table_column_list_sql(table_name)
-            columns = all_columns[:len(all_columns) - 4]  # Обрезаем служебные колонки
-            for value in source_row[:len(source_row) - 4]:  # Обрезаем служебные колонки
-                placeholders.append('%s')
-                params.append(value)
+        for col_system_name, value in values.items():
+            columns.append(f'"{col_system_name}"')
+            placeholders.append('%s')
+            params.append(value)
 
         columns.append('position')
         placeholders.append('%s')
@@ -102,6 +90,7 @@ def insert_row(request):
     send_row_insert({
         "table_id": table_id,
         "position": returned_pos,
+        "values": values
     })
     return Response({
         'result': 'success',

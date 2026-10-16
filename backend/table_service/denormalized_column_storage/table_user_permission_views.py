@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from tables.models import Profile
 from .models import TableV2, TableUserPermissionV2, RoleV2
-from .request_validate import add_table_permission_request_validate, update_table_permission_request_validate
+from .request_validate import update_table_permission_request_validate
 
 
 @api_view(['GET'])
@@ -42,14 +42,11 @@ def get_user_table_permission(request):
 @api_view(['POST'])
 def remove_table_permission(request):
     """Метод для удаления прав на таблицу(TablePermissionV2) + удаление user_id в каждой строке"""
-    table_id, permission_id = add_table_permission_request_validate(request)
-    table = TableV2.objects.get(id=table_id)
-    user = User.objects.get(username=username)
-    table_permission = TableUserPermissionV2.objects.filter(
-        user=user,
-        table=table,
-    )
-    table_permission.delete()
+    permission_id = request.data['permission_id']
+
+    table_permission = TableUserPermissionV2.objects.get(id=permission_id)
+    table = table_permission.table
+    user = table_permission.user
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -59,6 +56,8 @@ def remove_table_permission(request):
                 WHERE {user.id} = ANY(allowed_users)
             """,
         )
+
+    table_permission.delete()
 
     return Response({'result': 'success'})
 

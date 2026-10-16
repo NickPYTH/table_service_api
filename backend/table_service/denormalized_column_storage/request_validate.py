@@ -96,18 +96,6 @@ def delete_table_request_validate(request):
     return table_name
 
 
-def add_table_permission_request_validate(request):
-    try:
-        table_id = request.data['table_id']
-    except Exception as e:
-        raise e
-    try:
-        permission_id = request.data['permission_id']
-    except Exception as e:
-        raise e
-    return table_id, permission_id
-
-
 def add_table_filial_permission_request_validate(request):
     try:
         table_id = request.data['table_id']

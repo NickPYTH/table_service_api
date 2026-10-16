@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+from tables.models import Filial
+
 
 class TableV2(models.Model):
     system_name = models.CharField(max_length=255)
@@ -20,6 +22,13 @@ class RoleV2(models.Model):
 class TableUserPermissionV2(models.Model):
     table = models.ForeignKey(TableV2, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    role = models.ForeignKey(RoleV2, on_delete=models.DO_NOTHING, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TableFilialPermissionV2(models.Model):
+    table = models.ForeignKey(TableV2, on_delete=models.DO_NOTHING)
+    filial = models.ForeignKey(Filial, on_delete=models.DO_NOTHING)
     role = models.ForeignKey(RoleV2, on_delete=models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

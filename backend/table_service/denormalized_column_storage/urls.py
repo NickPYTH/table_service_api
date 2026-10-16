@@ -1,10 +1,11 @@
 from django.urls.conf import path
 
-from . import column_views, row_views, cell_views
+from . import column_views, row_views, cell_views, table_user_permission_views, table_filial_permission_views
 from . import views
 
 urlpatterns = [
-    path('remove_table_permission/', views.remove_table_permission, name='remove_table_permission'),
+    path('remove_table_permission/', table_user_permission_views.remove_table_permission,
+         name='remove_table_permission'),
     path('delete_table/', views.delete_table, name='delete_table'),
     path('delete_row/', row_views.delete_row, name='delete_row'),
     path('update_cell/', cell_views.update_cell_request, name='update_cell'),
@@ -23,8 +24,21 @@ urlpatterns = [
     path('insert_row/', row_views.insert_row, name='insert_row'),
     path('insert_column/', column_views.insert_column, name='insert_column'),
     path('update_table_info/', views.update_table_info, name='update_table_info'),
-    path('get_user_table_permissions/', views.get_user_table_permissions, name='get_user_table_permissions'),
-    path('get_user_table_permission/', views.get_user_table_permission, name='get_user_table_permission'),
+    path('get_user_table_permissions/', table_user_permission_views.get_user_table_permissions,
+         name='get_user_table_permissions'),
+    path('get_user_table_permission/', table_user_permission_views.get_user_table_permission,
+         name='get_user_table_permission'),
     path('search_user/', views.search_user, name='search_user'),
-    path('update_table_permission/', views.update_table_permission, name='update_table_permission'),
+    path('update_table_permission/', table_user_permission_views.update_table_permission,
+         name='update_table_permission'),
+
+    path('remove_table_filial_permission/', table_filial_permission_views.remove_table_filial_permission,
+         name='remove_table_filial_permission'),
+    path('update_table_filial_permission/', table_filial_permission_views.update_table_filial_permission,
+         name='update_table_filial_permission'),
+    path('get_table_filial_permission/', table_filial_permission_views.get_table_filial_permission,
+         name='get_table_filial_permission'),
+    path('get_table_filial_permissions/', table_filial_permission_views.get_table_filial_permissions,
+         name='get_table_filial_permissions'),
+
 ]

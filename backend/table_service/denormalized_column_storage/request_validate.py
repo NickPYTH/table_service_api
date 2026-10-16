@@ -10,6 +10,7 @@ def create_from_file_request_validate(request):
 
     return file, table_name
 
+
 def get_table_data_request_validate(request):
     try:
         table_id = request.data['table_id']
@@ -44,6 +45,7 @@ def get_table_data_request_validate(request):
 
     return table_id, page, page_size, sort, filter, group_fields, group_keys
 
+
 def get_table_info_request_validate(request):
     try:
         table_id = request.data['table_id']
@@ -51,6 +53,7 @@ def get_table_info_request_validate(request):
         raise e
 
     return table_id
+
 
 def update_cell_request_validate(request):
     try:
@@ -72,6 +75,7 @@ def update_cell_request_validate(request):
 
     return table_id, column_name, row_id, value
 
+
 def delete_row_request_validate(request):
     try:
         table_name = request.data['table_name']
@@ -83,6 +87,7 @@ def delete_row_request_validate(request):
         raise e
     return table_name, row_id
 
+
 def delete_table_request_validate(request):
     try:
         table_name = request.data['table_name']
@@ -90,16 +95,30 @@ def delete_table_request_validate(request):
         raise e
     return table_name
 
+
 def add_table_permission_request_validate(request):
     try:
         table_id = request.data['table_id']
     except Exception as e:
         raise e
     try:
-        username = request.data['username']
+        permission_id = request.data['permission_id']
     except Exception as e:
         raise e
-    return table_id, username
+    return table_id, permission_id
+
+
+def add_table_filial_permission_request_validate(request):
+    try:
+        table_id = request.data['table_id']
+    except Exception as e:
+        raise e
+    try:
+        filial_name = request.data['filial']
+    except Exception as e:
+        raise e
+    return table_id, filial_name
+
 
 def update_table_permission_request_validate(request):
     try:
@@ -115,10 +134,31 @@ def update_table_permission_request_validate(request):
     except Exception as e:
         raise e
     try:
-        is_create = request.data['is_create']
+        permission_id = request.data['permission_id']
     except Exception as e:
         raise e
-    return table_id, username, role, is_create
+    return table_id, username, role, permission_id
+
+
+def update_table_filial_permission_request_validate(request):
+    try:
+        table_id = request.data['table_id']
+    except Exception as e:
+        raise e
+    try:
+        filial_name = request.data['filial']
+    except Exception as e:
+        raise e
+    try:
+        role = request.data['role']
+    except Exception as e:
+        raise e
+    try:
+        permission_id = request.data['permission_id']
+    except Exception as e:
+        raise e
+    return table_id, filial_name, role, permission_id
+
 
 def get_table_permission_request_validate(request):
     try:
@@ -126,6 +166,7 @@ def get_table_permission_request_validate(request):
     except Exception as e:
         raise e
     return table_id
+
 
 def update_table_request_validate(request):
     try:
@@ -138,6 +179,7 @@ def update_table_request_validate(request):
         raise e
     return table_id, alternative_name
 
+
 def remove_table_permission_request_validate(request):
     try:
         table_id = request.data['table_id']
@@ -148,6 +190,7 @@ def remove_table_permission_request_validate(request):
     except Exception as e:
         raise e
     return table_id, user_id
+
 
 def update_column_request_validate(request):
     try:
@@ -179,6 +222,7 @@ def update_column_request_validate(request):
     except Exception as e:
         raise e
     return table_id, column_system_name, column_alternative_name, column_type, hidden, required, readonly
+
 
 def insert_column_request_validate(request):
     try:
@@ -214,6 +258,7 @@ def insert_column_request_validate(request):
     except Exception as e:
         raise e
     return table_id, neighborhood_system_name, position_name, alternative_name, column_type, hidden, required, readonly
+
 
 def get_column_request_validate(request):
     try:

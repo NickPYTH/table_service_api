@@ -5,7 +5,6 @@ from . import views
 
 urlpatterns = [
     path('remove_table_permission/', views.remove_table_permission, name='remove_table_permission'),
-    path('add_table_permission/', views.add_table_permission, name='add_table_permission'),
     path('delete_table/', views.delete_table, name='delete_table'),
     path('delete_row/', row_views.delete_row, name='delete_row'),
     path('update_cell/', cell_views.update_cell_request, name='update_cell'),
@@ -25,4 +24,7 @@ urlpatterns = [
     path('insert_column/', column_views.insert_column, name='insert_column'),
     path('update_table_info/', views.update_table_info, name='update_table_info'),
     path('get_user_table_permissions/', views.get_user_table_permissions, name='get_user_table_permissions'),
+    path('get_user_table_permission/', views.get_user_table_permission, name='get_user_table_permission'),
+    path('search_user/', views.search_user, name='search_user'),
+    path('update_table_permission/', views.update_table_permission, name='update_table_permission'),
 ]

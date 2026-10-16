@@ -17,7 +17,7 @@ class RoleV2(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class TablePermissionV2(models.Model):
+class TableUserPermissionV2(models.Model):
     table = models.ForeignKey(TableV2, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     role = models.ForeignKey(RoleV2, on_delete=models.DO_NOTHING, blank=True, null=True)

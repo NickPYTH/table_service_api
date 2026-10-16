@@ -3,14 +3,16 @@ import io
 import openpyxl
 from django.contrib.auth.models import User
 from django.db import connection
+from django.db.models import Q
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from tables.models import Profile
-from .models import TableV2, ColumnV2, TablePermissionV2, RoleV2
+from .models import TableV2, ColumnV2, TableUserPermissionV2, RoleV2
 from .request_validate import create_from_file_request_validate, get_table_data_request_validate, \
     delete_table_request_validate, \
-    add_table_permission_request_validate, get_table_info_request_validate, update_table_request_validate
+    add_table_permission_request_validate, get_table_info_request_validate, update_table_request_validate, \
+    update_table_permission_request_validate
 from .row_views import STEP
 from .utils import build_order_by_sql, build_filter_sql, escape_tsv, col_letter
 
@@ -91,7 +93,7 @@ def create_from_file(request):
     )
     table.save()
     owner_role = RoleV2.objects.get(name='owner')
-    TablePermissionV2.objects.create(table=table, user=user, role=owner_role)
+    TableUserPermissionV2.objects.create(table=table, user=user, role=owner_role)
     for i, column in enumerate(columns, start=1):
         column_model = ColumnV2.objects.create(
             table=table,
@@ -117,7 +119,7 @@ def get_table_info(request):
         }, status=404)
     user = request.user
     try:
-        role = TablePermissionV2.objects.get(table=table, user=user).role
+        role = TableUserPermissionV2.objects.get(table=table, user=user).role
     except Exception as e:
         return Response({
             "error": str(e)
@@ -227,7 +229,7 @@ def get_table_data(request):
 def delete_table(request):
     table_name = delete_table_request_validate(request)
     table = TableV2.objects.get(system_name=table_name)
-    TablePermissionV2.objects.filter(table=table).delete()
+    TableUserPermissionV2.objects.filter(table=table).delete()
     with connection.cursor() as cursor:
         cursor.execute(
             f"DELETE FROM denormalized_column_storage_cellformula WHERE table_name = '{table_name}'",
@@ -251,36 +253,12 @@ def delete_table(request):
     return Response({"result": "success"})
 
 
-@api_view(['POST'])
-def add_table_permission(request):
-    """Метод для выдачи прав на таблицу(TablePermissionV2) + добавление user_id в каждую строку"""
-    table_id, user_id = add_table_permission_request_validate(request)
-    table = TableV2.objects.get(id=table_id)
-    user = User.objects.get(id=user_id)
-    table_permission = TablePermissionV2.objects.create(
-        user=user,
-        table=table,
-    )
-    table_permission.save()
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-                UPDATE "{table.system_name}"
-                SET allowed_users = array_append(allowed_users, {user_id})
-                WHERE NOT ({user_id} = ANY(allowed_users))
-            """,
-        )
-
-    return Response({'result': 'success'})
-
-
 @api_view(['GET'])
 def get_user_table_permissions(request):
     table_id = request.query_params.get('table_id')
     table = TableV2.objects.get(id=table_id)
     response = []
-    for permission in TablePermissionV2.objects.filter(table=table):
+    for permission in TableUserPermissionV2.objects.filter(table=table):
         user = permission.user
         profile = Profile.objects.get(user=user)
         role = permission.role
@@ -295,13 +273,24 @@ def get_user_table_permissions(request):
     return Response(response)
 
 
+@api_view(['GET'])
+def get_user_table_permission(request):
+    id = request.query_params.get('id')
+    p = TableUserPermissionV2.objects.get(id=id)
+    return Response({
+        "id": p.id,
+        "username": p.user.username,
+        "role": p.role.name
+    })
+
+
 @api_view(['POST'])
 def remove_table_permission(request):
     """Метод для удаления прав на таблицу(TablePermissionV2) + удаление user_id в каждой строке"""
-    table_id, user_id = add_table_permission_request_validate(request)
+    table_id, username = add_table_permission_request_validate(request)
     table = TableV2.objects.get(id=table_id)
-    user = User.objects.get(id=user_id)
-    table_permission = TablePermissionV2.objects.get(
+    user = User.objects.get(username=username)
+    table_permission = TableUserPermissionV2.objects.filter(
         user=user,
         table=table,
     )
@@ -311,11 +300,40 @@ def remove_table_permission(request):
         cursor.execute(
             f"""
                 UPDATE "{table.system_name}"
-                SET allowed_users = array_remove(allowed_users, {user_id})
-                WHERE {user_id} = ANY(allowed_users)
+                SET allowed_users = array_remove(allowed_users, {user.id})
+                WHERE {user.id} = ANY(allowed_users)
             """,
         )
 
+    return Response({'result': 'success'})
+
+
+@api_view(['POST'])
+def update_table_permission(request):
+    table_id, username, role, is_create = update_table_permission_request_validate(request)
+    table = TableV2.objects.get(id=table_id)
+    user = User.objects.get(username=username)
+    role = RoleV2.objects.get(name=role)
+    if is_create:
+        TableUserPermissionV2.objects.create(
+            user=user,
+            table=table,
+            role=role
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                    UPDATE "{table.system_name}"
+                    SET allowed_users = array_append(allowed_users, {user.id})
+                    WHERE NOT ({user.id} = ANY(allowed_users))
+                """,
+            )
+    else:
+        TableUserPermissionV2.objects.update(
+            user=user,
+            table=table,
+            role=role
+        )
     return Response({'result': 'success'})
 
 
@@ -327,3 +345,21 @@ def update_table_info(request):
     table.save()
 
     return Response({'result': 'success'})
+
+
+@api_view(['GET'])
+def search_user(request):
+    search_query = request.query_params.get('search_query')
+    profiles = Profile.objects.select_related('employee').all()
+    profiles_filtered = profiles.filter(
+        Q(employee__firstname__icontains=search_query) |
+        Q(employee__secondname__icontains=search_query) |
+        Q(employee__lastname__icontains=search_query) |
+        Q(employee__email__icontains=search_query)
+    )
+    response = []
+    for profile in profiles_filtered:
+        response.append({
+            "value": profile.user.username
+        })
+    return Response(response)

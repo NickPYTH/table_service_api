@@ -96,10 +96,29 @@ def add_table_permission_request_validate(request):
     except Exception as e:
         raise e
     try:
-        user_id = request.data['user_id']
+        username = request.data['username']
     except Exception as e:
         raise e
-    return table_id, user_id
+    return table_id, username
+
+def update_table_permission_request_validate(request):
+    try:
+        table_id = request.data['table_id']
+    except Exception as e:
+        raise e
+    try:
+        username = request.data['username']
+    except Exception as e:
+        raise e
+    try:
+        role = request.data['role']
+    except Exception as e:
+        raise e
+    try:
+        is_create = request.data['is_create']
+    except Exception as e:
+        raise e
+    return table_id, username, role, is_create
 
 def get_table_permission_request_validate(request):
     try:

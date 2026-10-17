@@ -131,70 +131,92 @@ def get_table_info(request):
 
 @api_view(['POST'])
 def get_table_data(request):
-    # Проверка входных параметров
     table_id, page, page_size, sort, filter, group_fields, group_keys = get_table_data_request_validate(request)
     try:
         table = TableV2.objects.get(id=table_id)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+    # отдаём все группы сразу
+    is_group_level = bool(group_fields) and len(group_keys) < len(group_fields)
+
     with connection.cursor() as cursor:
-        if group_fields and not group_keys:
-            group_field = group_fields[0]  # например 'b' пока одноуровневая группировка
-            cursor.execute(
-                f"SELECT COUNT(DISTINCT {group_field}) FROM {table.system_name}"
-            )
-            total = cursor.fetchone()[0]
-            cursor.execute(
-                f"""
-                SELECT 
-                    'group-' || {group_field} AS id, 
-                    {group_field} AS name, 
-                    count(*) AS "childrenCount"
-                FROM {table.system_name}
-                GROUP BY {group_field}
-                """
-            )
-        elif group_fields and group_keys:
-            # Фильтруем по уже раскрытым ключам, строки по уже раскрытым ключам
+        if is_group_level:
+            # группа
+            current_field = group_fields[len(group_keys)]  # поле текущего уровня
+
+            # WHERE по уже раскрытым ключам
             where_parts = []
             params = []
             for i, key in enumerate(group_keys):
-                field = group_fields[i]
-                where_parts.append(f"{field} = %s")
+                where_parts.append(f'"{group_fields[i]}" = %s')
                 params.append(key)
+            where_sql = f"WHERE {' AND '.join(where_parts)}" if where_parts else ""
 
-            where_sql = " AND ".join(where_parts)
-
-            # Получаем кол-во записей
+            # кол-во групп на этом уровне
             cursor.execute(
                 f"""
-                    SELECT COUNT(*)
-                    FROM {table.system_name}
-                    WHERE {where_sql}
-                    """,
-                group_keys
+                SELECT COUNT(DISTINCT "{current_field}")
+                FROM {table.system_name}
+                {where_sql}
+                """,
+                params,
             )
             total = cursor.fetchone()[0]
 
-            params.extend([total, 0])
+
+            path_fields = group_fields[:len(group_keys) + 1]
+            id_expr = " || '-' || ".join(f'"{f}"' for f in path_fields) # id группы (весь путь чтоб не было конфликта)
 
             cursor.execute(
                 f"""
-                SELECT *
+                SELECT
+                    'group-' || {id_expr} AS id,
+                    "{current_field}" AS name,
+                    COUNT(*) AS "childrenCount"
+                FROM {table.system_name}
+                {where_sql}
+                GROUP BY {', '.join(f'"{f}"' for f in path_fields)}
+                ORDER BY "{current_field}"
+                """,
+                params,
+            )
+
+        elif group_fields and len(group_keys) == len(group_fields):
+            # Листья строки под раскрытыми ключами
+            where_parts = []
+            params = []
+            for i, key in enumerate(group_keys):
+                where_parts.append(f'"{group_fields[i]}" = %s')
+                params.append(key)
+            where_sql = " AND ".join(where_parts)
+
+            cursor.execute(
+                f"SELECT COUNT(*) FROM {table.system_name} WHERE {where_sql}",
+                params,
+            )
+            total = cursor.fetchone()[0]
+
+            cursor.execute(
+                f"""
+                SELECT *,
+                       ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS position_humanity
                 FROM {table.system_name}
                 WHERE {where_sql}
-                LIMIT %s OFFSET %s
+                ORDER BY position, id
+                LIMIT %s OFFSET 0
                 """,
-                params
+                params + [page_size],
             )
+
         else:
-            # Получаем кол-во записей
+            # Без группировки
             cursor.execute(
                 f"SELECT COUNT(*) FROM {table.system_name} WHERE allowed_users @> ARRAY[{[1]}]"
             )
             total = cursor.fetchone()[0]
 
-            offset = page * page_size  # 0 * 25 = 0 => отступ отсутствует
+            offset = page * page_size
             order_sql = build_order_by_sql(sort, table.system_name)
             cursor.execute(f"""
                         SELECT *,
@@ -204,25 +226,25 @@ def get_table_data(request):
                         {order_sql}
                         LIMIT {page_size} OFFSET {offset}
                     """)
+
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
 
     data = [dict(zip(columns, row)) for row in rows]
 
     total_pages = int(total / page_size) if total % page_size == 0 else int(total / page_size) + 1
+
     return Response({
-        # "columns": columns,
         "rows": data,
         "paginator": {
-            "page": 0 if group_fields and group_keys else page,
-            "pageSize": total if group_fields and group_keys else page_size,
+            "page": 0 if is_group_level else page,
+            "pageSize": total if is_group_level else page_size,
             "total": total,
-            "totalPages": 1 if group_fields and group_keys else total_pages,
-            "hasNext": page + 1 < total_pages,  # Учитываем что page с 0
-            "hasPrev": page + 1 > 1,  # Учитываем что page с 0
+            "totalPages": 1 if is_group_level else total_pages,
+            "hasNext": False if is_group_level else page + 1 < total_pages,
+            "hasPrev": False if is_group_level else page + 1 > 1,
         }
     }, status=200)
-
 
 @api_view(['DELETE'])
 def delete_table(request):

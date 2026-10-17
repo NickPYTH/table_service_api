@@ -186,6 +186,14 @@ def stack_calculator(table_name, formula_str):
                 item_1 = int(stack.pop())
                 item_2 = int(stack.pop())
                 stack.append(item_2 - item_1)
+            if node.value == '*':
+                item_1 = int(stack.pop())
+                item_2 = int(stack.pop())
+                stack.append(item_2 * item_1)
+            if node.value == '/':
+                item_1 = int(stack.pop())
+                item_2 = int(stack.pop())
+                stack.append(item_2 / item_1)
     if len(stack) == 1:
         return stack[0]
     else:
